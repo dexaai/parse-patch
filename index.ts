@@ -1,4 +1,3 @@
-/** Commit details parsed from a git patch file */
 export type ParsedCommit = {
   sha: string;
   authorName: string;
@@ -8,14 +7,10 @@ export type ParsedCommit = {
   diff: string;
 };
 
-/**
- * Parses a git patch file into an array of commits.
- */
 export function parseGitPatch(patch: string): ParsedCommit[] {
   const lines = patch.split("\n");
   const commits: ParsedCommit[] = [];
 
-  // We'll accumulate data as we go through the file
   let currentSha = "";
   let currentAuthorName = "";
   let currentAuthorEmail = "";
@@ -24,8 +19,8 @@ export function parseGitPatch(patch: string): ParsedCommit[] {
   let currentDiffLines: string[] = [];
   let inMessageSection = false;
   let inDiffSection = false;
+  let foundDiffStart = false; // To track when we've hit `diff --git`
 
-  // Helper function to finalize a commit if we have started one
   const finalizeCommit = () => {
     if (!currentSha) return; // No commit started yet
     commits.push({
@@ -34,7 +29,8 @@ export function parseGitPatch(patch: string): ParsedCommit[] {
       authorEmail: currentAuthorEmail,
       date: currentDate,
       message: currentMessageLines.join("\n").trim(),
-      diff: currentDiffLines.join("\n").trim(),
+      diff:
+        currentDiffLines.join("\n") + (currentDiffLines.length > 0 ? "\n" : ""),
     });
     // Reset for next commit
     currentSha = "";
@@ -45,22 +41,19 @@ export function parseGitPatch(patch: string): ParsedCommit[] {
     currentDiffLines = [];
     inMessageSection = false;
     inDiffSection = false;
+    foundDiffStart = false;
   };
 
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-
+  for (const line of lines) {
     // Detect the start of a new commit
-    // Format: From <sha> Mon Sep 17 00:00:00 2001
     const fromMatch = line.match(/^From\s+([0-9a-f]{40})\s/);
     if (fromMatch) {
-      // We have a new commit, finalize the previous one first
       finalizeCommit();
       currentSha = fromMatch[1];
       continue;
     }
 
-    // Parse author line: From: Author Name <email>
+    // Parse author line: From: Name <email>
     if (line.startsWith("From: ")) {
       const authorLine = line.slice("From: ".length).trim();
       const emailMatch = authorLine.match(/<(.*)>/);
@@ -79,7 +72,7 @@ export function parseGitPatch(patch: string): ParsedCommit[] {
       continue;
     }
 
-    // Parse subject line and then subsequent message lines until we hit '---' on its own line
+    // Parse subject line
     if (line.startsWith("Subject: ")) {
       let subject = line.slice("Subject: ".length).trim();
       // Remove leading "[PATCH] " if present
@@ -91,27 +84,44 @@ export function parseGitPatch(patch: string): ParsedCommit[] {
       continue;
     }
 
+    // Check if we are transitioning to diff section
     if (inMessageSection && line.trim() === "---") {
-      // End of message, start of diff section
       inMessageSection = false;
       inDiffSection = true;
       continue;
     }
 
+    // If we are in the message section, just append lines to message
     if (inMessageSection) {
-      // Lines are part of the message
       currentMessageLines.push(line);
       continue;
     }
 
-    if (inDiffSection) {
-      // Lines are part of the diff
+    // If we are in the diff section but haven't found `diff --git` yet
+    if (inDiffSection && !foundDiffStart) {
+      // Look for the start of the actual diff
+      if (line.startsWith("diff --git ")) {
+        foundDiffStart = true;
+        currentDiffLines.push(line);
+      }
+      // Ignore everything until we find `diff --git`
+      continue;
+    }
+
+    // If we are in diff section and already found `diff --git`
+    if (inDiffSection && foundDiffStart) {
+      // Stop capturing when we hit a line that starts the patch trailer (like `--`)
+      if (line === "--") {
+        // Don't add this line and don't continue reading the diff
+        inDiffSection = false;
+        foundDiffStart = false;
+        continue;
+      }
       currentDiffLines.push(line);
       continue;
     }
   }
 
-  // Finalize the last commit if present
   finalizeCommit();
 
   return commits;

@@ -27,7 +27,8 @@ Line 3
 Line 4
 Line 5
 Line 6
-`;
+--
+2.47.1`;
     const commits = parseGitPatch(patch);
     expect(commits).toHaveLength(1);
     const commit = commits[0];
@@ -38,8 +39,19 @@ Line 6
     expect(commit.message).toBe(
       "My commit message\n\nSome more lines of the commit message.",
     );
-    expect(commit.diff).toContain("diff --git a/file1.txt b/file1.txt");
-    expect(commit.diff).toContain("+Line 2 changed");
+    expect(commit.diff).toBe(`diff --git a/file1.txt b/file1.txt
+index 24967d3..b37620a 100644
+--- a/file1.txt
++++ b/file1.txt
+@@ -1,6 +1,6 @@
+Line 1
+-Line 2
++Line 2 changed
+Line 3
+Line 4
+Line 5
+Line 6
+`);
   });
 
   it("parses multiple commits patch", () => {
@@ -65,7 +77,7 @@ Line 1
 Line 3
 Line 4
 Line 5
-Line 6
+Line foo
 From 4e9c51d9919f16c09476f51eaa19b818564904b1 Mon Sep 17 00:00:00 2001
 From: Jane Smith <jane@example.com>
 Date: Thu, 13 Oct 2022 15:38:15 +0200
@@ -89,8 +101,7 @@ Line 1
 Line 3
 Line 4
 Line 5
-Line 6
-`;
+Line bar`;
 
     const commits = parseGitPatch(patch);
     expect(commits).toHaveLength(2);
@@ -102,9 +113,19 @@ Line 6
     expect(first.authorEmail).toBe("john@example.com");
     expect(first.date).toBe("Wed, 12 Oct 2022 14:38:15 +0200");
     expect(first.message).toBe("First commit message\n\nLine two of message.");
-    expect(first.diff).toContain("diff --git a/file1.txt b/file1.txt");
-    expect(first.diff).toContain("+Line 2 changed");
-
+    expect(first.diff).toBe(`diff --git a/file1.txt b/file1.txt
+index 24967d3..b37620a 100644
+--- a/file1.txt
++++ b/file1.txt
+@@ -1,6 +1,6 @@
+Line 1
+-Line 2
++Line 2 changed
+Line 3
+Line 4
+Line 5
+Line foo
+`);
     expect(second.sha).toBe("4e9c51d9919f16c09476f51eaa19b818564904b1");
     expect(second.authorName).toBe("Jane Smith");
     expect(second.authorEmail).toBe("jane@example.com");
@@ -112,8 +133,19 @@ Line 6
     expect(second.message).toBe(
       "Second commit message\n\nAnother line\nAnd another.",
     );
-    expect(second.diff).toContain("diff --git a/file2.txt b/file2.txt");
-    expect(second.diff).toContain("+Line 2 changed again");
+    expect(second.diff).toBe(`diff --git a/file2.txt b/file2.txt
+index 24967d3..b37620a 100644
+--- a/file2.txt
++++ b/file2.txt
+@@ -1,6 +1,6 @@
+Line 1
+-Line 2
++Line 2 changed again
+Line 3
+Line 4
+Line 5
+Line bar
+`);
   });
 
   it("handles multiline messages without any message lines after subject", () => {
