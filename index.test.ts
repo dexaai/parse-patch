@@ -331,4 +331,51 @@ At the end of the day, this should all be captured as part of the commit message
     expect(commit.diff).toContain("+Tricky line 1");
     expect(commit.diff).toContain("+Tricky line 2");
   });
+
+  it("parses this patch", () => {
+    const patch = `
+From 44c8f979f6b96b9dd8c06a36a5a0cb13a5a67ab6 Mon Sep 17 00:00:00 2001
+From: Foo <foo@dexa.ai>
+Date: Thu, 19 Dec 2024 20:54:06 +0000
+Subject: [PATCH] feat: Some changes
+
+---
+ src/ai/workers/create-worker.ts | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/src/ai/workers/create-worker.ts b/src/ai/workers/create-worker.ts
+index 4328ba4..63af774 100644
+--- a/src/ai/workers/create-worker.ts
++++ b/src/ai/workers/create-worker.ts
+@@ -1,4 +1,5 @@
+-export function createWorker(): void {
+-  // TODO: implement your worker logic here
+-  console.log('createWorker called');
++// placeholder to begin.
++
++export function createWorkerPlaceholder() {
++  return 'placeholder';
+ }
+-- 
+2.39.5`;
+
+    const expextedDiff = `diff --git a/src/ai/workers/create-worker.ts b/src/ai/workers/create-worker.ts
+index 4328ba4..63af774 100644
+--- a/src/ai/workers/create-worker.ts
++++ b/src/ai/workers/create-worker.ts
+@@ -1,4 +1,5 @@
+-export function createWorker(): void {
+-  // TODO: implement your worker logic here
+-  console.log('createWorker called');
++// placeholder to begin.
++
++export function createWorkerPlaceholder() {
++  return 'placeholder';
+ }
+`;
+
+    const commits = parseGitPatch(patch);
+    expect(commits).toHaveLength(1);
+    expect(commits[0].diff).toBe(expextedDiff);
+  });
 });

@@ -110,8 +110,8 @@ export function parseGitPatch(patch: string): ParsedCommit[] {
 
     // If we are in diff section and already found `diff --git`
     if (inDiffSection && foundDiffStart) {
-      // Stop capturing when we hit a line that starts the patch trailer (like `--`)
-      if (line === "--") {
+      // Stop capturing when we hit a line that, after trimming, is `--`
+      if (line.trim() === "--") {
         // Don't add this line and don't continue reading the diff
         inDiffSection = false;
         foundDiffStart = false;
