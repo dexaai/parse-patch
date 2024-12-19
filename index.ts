@@ -75,10 +75,8 @@ export function parseGitPatch(patch: string): ParsedCommit[] {
     // Parse subject line
     if (line.startsWith("Subject: ")) {
       let subject = line.slice("Subject: ".length).trim();
-      // Remove leading "[PATCH] " if present
-      if (subject.startsWith("[PATCH] ")) {
-        subject = subject.slice("[PATCH] ".length);
-      }
+      // Remove leading "[PATCH ...]" if present
+      subject = subject.replace(/^\[PATCH[^\]]*\]\s*/, "");
       currentMessageLines.push(subject);
       inMessageSection = true;
       continue;
@@ -112,7 +110,6 @@ export function parseGitPatch(patch: string): ParsedCommit[] {
     if (inDiffSection && foundDiffStart) {
       // Stop capturing when we hit a line that, after trimming, is `--`
       if (line.trim() === "--") {
-        // Don't add this line and don't continue reading the diff
         inDiffSection = false;
         foundDiffStart = false;
         continue;

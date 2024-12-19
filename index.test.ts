@@ -58,7 +58,7 @@ Line 6
     const patch = `From f9ec51d9919f16c09476f51eaa19b818564904b2 Mon Sep 17 00:00:00 2001
 From: John Doe <john@example.com>
 Date: Wed, 12 Oct 2022 14:38:15 +0200
-Subject: [PATCH] First commit message
+Subject: [PATCH 1/2] First commit message
 
 Line two of message.
 
@@ -81,7 +81,7 @@ Line foo
 From 4e9c51d9919f16c09476f51eaa19b818564904b1 Mon Sep 17 00:00:00 2001
 From: Jane Smith <jane@example.com>
 Date: Thu, 13 Oct 2022 15:38:15 +0200
-Subject: [PATCH] Second commit message
+Subject: [PATCH 1/2] Second commit message
 
 Another line
 And another.
